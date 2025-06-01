@@ -7,16 +7,28 @@ spring:
     name: orange-graph
 
   datasource:
-    url: jdbc:h2:mem:orange_graph_db
-    username: sa
-    password: password
-    driverClassName: org.h2.Driver
+    url: jdbc:mysql://localhost:3306/orange_graph_db
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
 
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
 
   h2:
     console:
       enabled: true
+
+  
+  #datasource:
+    #url: jdbc:h2:mem:orange_graph_db
+    #username: sa
+    #password: password
+    #driverClassName: org.h2.Driver
+
+  #jpa:
+   # database-platform: org.hibernate.dialect.H2Dialect
+
+  #configuração H2 caso tenha problemas com o docker
