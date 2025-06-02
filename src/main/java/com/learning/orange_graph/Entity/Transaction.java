@@ -38,8 +38,4 @@ public class Transaction {
     @Column(name = "date_Time_Transaction")
     private LocalDateTime date_Time_Transaction;
 
-
-    
-    
-
 }

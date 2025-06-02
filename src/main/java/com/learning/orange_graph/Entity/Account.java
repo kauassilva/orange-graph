@@ -6,8 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Getter
@@ -15,7 +14,14 @@ import lombok.Setter;
 @Table(name = "ACCOUNT_TABLE")
 
 public class Account {
-    
+    public Account(String cpf, String name, String email, Double balance, Boolean suspect) {
+        this.cpf = cpf;
+        this.name = name;
+        this.email = email;
+        this.balance = balance;
+        this.suspect = suspect;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,9 +36,9 @@ public class Account {
     private String email;
 
     @Column(name = "balance")
-    private double balance;
+    private Double balance;
 
     @Column(name = "suspect")
-    private boolean suspect;
+    private Boolean suspect;
     
-    }
+}
