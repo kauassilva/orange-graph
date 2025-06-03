@@ -25,12 +25,12 @@ public class Transaction {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "receiver_id", nullable = false)
-    private Account receiver;
+    @JoinColumn(name = "sender_id", nullable = false)
+    private Account sender;
 
     @ManyToOne
     @JoinColumn(name = "recipient_id", nullable = false)
-    private Account recipient;
+    private Account receiver;
 
     @Column(name = "value")
     private Double value;
