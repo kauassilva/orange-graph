@@ -9,6 +9,8 @@ import jakarta.persistence.Table;
 import lombok.*;
 
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 @Getter
 @Setter
 @Table(name = "ACCOUNT_TABLE")
