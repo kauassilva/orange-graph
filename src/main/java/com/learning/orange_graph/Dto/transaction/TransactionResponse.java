@@ -15,7 +15,7 @@ import lombok.Setter;
 public class TransactionResponse {
     private Long id;
     private String senderName;
-    private String recipientName;
+    private String receiverName;
     private Double value;
     private LocalDateTime transactionDate;
 }
