@@ -1,5 +1,7 @@
 package com.learning.orange_graph.Entity;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -16,12 +18,13 @@ import lombok.*;
 @Table(name = "ACCOUNT_TABLE")
 
 public class Account {
-    public Account(String cpf, String name, String email, Double balance, Boolean suspect) {
-        this.cpf = cpf;
+    public Account(String name, String cpf, String email, Double balance, Boolean suspect, LocalDate creationDate) {
         this.name = name;
+        this.cpf = cpf;
         this.email = email;
         this.balance = balance;
         this.suspect = suspect;
+        this.creationDate = creationDate;
     }
 
     @Id
@@ -42,5 +45,8 @@ public class Account {
 
     @Column(name = "suspect")
     private Boolean suspect;
+
+    @Column(name = "creationDate")
+    private LocalDate creationDate;
     
 }
