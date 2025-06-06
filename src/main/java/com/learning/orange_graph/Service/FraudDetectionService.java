@@ -13,6 +13,8 @@ import java.util.*;
 @Service
 public class FraudDetectionService {
 
+    public static final int SUSPECT_RATING = 1;
+
     private final Account_Repository accountRepository;
     private final TransactionRepository transactionRepository;
 
@@ -25,7 +27,12 @@ public class FraudDetectionService {
         Optional<Account> tempAccount = accountRepository.findById(receiverId);
         Account account = tempAccount.get();
 
-        boolean isSuspect = account.getSuspect();
+        BankGraph graph = createInMemoryGraph();
+        System.out.println(graph);
+        Set<Long> longs = depthFirstTraversal(receiverId);
+        System.out.println(longs);
+
+        boolean isSuspect = account.getSuspectRating() > SUSPECT_RATING;
         SuspicionCheckResponseDto suspicionCheckResponseDto;
 
         if (isSuspect) {
@@ -33,11 +40,6 @@ public class FraudDetectionService {
         } else {
             suspicionCheckResponseDto = new SuspicionCheckResponseDto(isSuspect, "Conta do bem, pode fazer o PIX!");
         }
-
-        BankGraph graph = createInMemoryGraph();
-        System.out.println(graph);
-        Set<Long> longs = depthFirstTraversal(receiverId);
-        System.out.println(longs);
 
         return suspicionCheckResponseDto;
     }
@@ -125,13 +127,14 @@ public class FraudDetectionService {
 
         for (Map.Entry<Double, Integer> entry : countValue.entrySet()) {
             if(entry.getValue() >= 5) {
-               isSuspect = true;
+                isSuspect = true;
+                sender.setSuspectRating(sender.getSuspectRating()+1);
             }
         }
-        sender.setSuspect(isSuspect);
+
         accountRepository.save(sender);
 
-         if (isSuspect) {
+        if (isSuspect) {
             suspicionCheckResponseDto = new SuspicionCheckResponseDto(isSuspect, "A conta " +sender.getName() + " demonstrou transações suspeitas");
         } else {
             suspicionCheckResponseDto = new SuspicionCheckResponseDto(isSuspect, "Sem transações suspeitas");
@@ -142,15 +145,6 @@ public class FraudDetectionService {
         Set<Long> longs = depthFirstTraversal(receiverId);
         System.out.println(longs);
         return suspicionCheckResponseDto;
-
-        
     }
 
-    
-
-    
-
 }
-
-
-//ESSE AQUI É O CERTO

@@ -18,12 +18,12 @@ import lombok.*;
 @Table(name = "ACCOUNT_TABLE")
 
 public class Account {
-    public Account(String name, String cpf, String email, Double balance, Boolean suspect, LocalDate creationDate) {
+    public Account(String name, String cpf, String email, Double balance, Integer suspectRating, LocalDate creationDate) {
         this.name = name;
         this.cpf = cpf;
         this.email = email;
         this.balance = balance;
-        this.suspect = suspect;
+        this.suspectRating = suspectRating;
         this.creationDate = creationDate;
     }
 
@@ -43,8 +43,8 @@ public class Account {
     @Column(name = "balance")
     private Double balance;
 
-    @Column(name = "suspect")
-    private Boolean suspect;
+    @Column(name = "suspectRating")
+    private Integer suspectRating;
 
     @Column(name = "creationDate")
     private LocalDate creationDate;
