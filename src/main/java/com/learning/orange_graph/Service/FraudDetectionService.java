@@ -100,4 +100,57 @@ public class FraudDetectionService {
         return visited;
     }
 
+    public Transaction validateTransaction(Long transactionId){
+        return transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new RuntimeException("Transação não encontrada"));
+    }
+
+    public SuspicionCheckResponseDto suspicionLotTransaction(Long transactionId){
+        Transaction transaction = validateTransaction(transactionId);
+        Account sender = transaction.getSender();
+        Account receiver = transaction.getReceiver();
+        Long receiverId = receiver.getId();
+
+        boolean isSuspect = false;
+        SuspicionCheckResponseDto suspicionCheckResponseDto;
+
+        List<Transaction> transactionSender = transactionRepository.findBySender(sender);
+        Map<Double, Integer> countValue = new HashMap<>();
+
+        for (Transaction t : transactionSender) {
+            Double value = t.getValue();
+            countValue.put(value, countValue.getOrDefault(value, 0) + 1);
+        }
+
+
+        for (Map.Entry<Double, Integer> entry : countValue.entrySet()) {
+            if(entry.getValue() >= 5) {
+               isSuspect = true;
+            }
+        }
+        sender.setSuspect(isSuspect);
+        accountRepository.save(sender);
+
+         if (isSuspect) {
+            suspicionCheckResponseDto = new SuspicionCheckResponseDto(isSuspect, "A conta " +sender.getName() + " demonstrou transações suspeitas");
+        } else {
+            suspicionCheckResponseDto = new SuspicionCheckResponseDto(isSuspect, "Sem transações suspeitas");
+        }
+
+        BankGraph graph = createInMemoryGraph();
+        System.out.println(graph);
+        Set<Long> longs = depthFirstTraversal(receiverId);
+        System.out.println(longs);
+        return suspicionCheckResponseDto;
+
+        
+    }
+
+    
+
+    
+
 }
+
+
+//ESSE AQUI É O CERTO
