@@ -24,6 +24,15 @@ public class BankGraph {
         return adjacentList.containsKey(accountId);
     }
 
+
+    public List<Long> getNeighbors(Long accountId) {
+        return adjacentList.getOrDefault(accountId, Collections.emptyList());
+    }
+
+    public Account getAccountById(Long receiverId) {
+        return accountMap.get(receiverId);
+    }
+
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
@@ -43,7 +52,4 @@ public class BankGraph {
         return stringBuilder.toString();
     }
 
-    public List<Long> getNeighbors(Long accountId) {
-        return adjacentList.getOrDefault(accountId, Collections.emptyList());
-    }
 }

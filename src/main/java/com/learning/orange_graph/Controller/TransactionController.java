@@ -38,7 +38,7 @@ public class TransactionController {
                 transaction.getSender().getName(),
                 transaction.getReceiver().getName(),
                 transaction.getValue(),
-                transaction.getDate_Time_Transaction()
+                transaction.getDateTimeTransaction()
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);

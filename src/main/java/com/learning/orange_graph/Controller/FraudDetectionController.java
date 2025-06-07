@@ -6,11 +6,7 @@ import com.learning.orange_graph.Service.FraudDetectionService;
 import javax.management.RuntimeErrorException;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/check-suspicion")
@@ -23,12 +19,19 @@ public class FraudDetectionController {
     }
 
     @GetMapping("/{receiverId}")
-    public ResponseEntity<SuspicionCheckResponseDto> checkSuspicion(@PathVariable Long receiverId) {
-        if (receiverId == null) {
-            throw new RuntimeException("Receiver ID cannot be null");
-        }
+    public ResponseEntity<SuspicionCheckResponseDto> checkSuspicion(
+            @PathVariable Long receiverId,
+            @RequestParam(defaultValue = "24") int timeWindowHours,
+            @RequestParam(defaultValue = "5") int minIncomingTransactions,
+            @RequestParam(defaultValue = "5") int minOutgoingTransactions,
+            @RequestParam(defaultValue = "1000.0") double minTotalIncomingValue,
+            @RequestParam(defaultValue = "900.0") double minTotalOutgoingValue,
+            @RequestParam(defaultValue = "0.1") double balanceRetentionThreshold,
+            @RequestParam(defaultValue = "3") int minUniqueCounterpartiesThreshold) {
 
-        SuspicionCheckResponseDto response = service.checkSuspicion(receiverId);
+        SuspicionCheckResponseDto response = service.checkSuspicion(
+                receiverId, timeWindowHours, minIncomingTransactions, minOutgoingTransactions,minTotalIncomingValue,
+                minTotalOutgoingValue, balanceRetentionThreshold, minUniqueCounterpartiesThreshold);
 
         return ResponseEntity.ok(response);
     }

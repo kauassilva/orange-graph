@@ -42,7 +42,7 @@ public class TransactionService {
         transaction.setSender(sender);
         transaction.setReceiver(receiver);
         transaction.setValue(request.value());
-        transaction.setDate_Time_Transaction(LocalDateTime.now());
+        transaction.setDateTimeTransaction(LocalDateTime.now());
 
         return transactionRepository.save(transaction);
     }
