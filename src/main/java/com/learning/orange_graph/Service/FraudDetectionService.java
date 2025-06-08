@@ -41,47 +41,105 @@ public class FraudDetectionService {
         BankGraph graph = createInMemoryGraph();
 
         // Obtem a conta e verifica sua existência
-        Account account = graph.getAccountById(accountId);
-        if (account == null) {
-            throw new RuntimeException("Conta com ID " + accountId + " não encontrada no grafo.");
-        }
+        Account account = getAccountOrThrow(accountId, graph);
 
         // Definicao do tempo de analise (por padrão, 24 horas)
         LocalDateTime endTime = LocalDateTime.now();
         LocalDateTime startTime = endTime.minusHours(timeWindowHours);
 
         // Listar as transacoes de entrada e saída da conta
-        List<Transaction> incomingTransactions = transactionRepository
-                .findByReceiverIdAndDateTimeTransactionBetween(accountId, startTime, endTime);
-        List<Transaction> outgoingTransactions = transactionRepository
-                .findBySenderIdAndDateTimeTransactionBetween(accountId, startTime, endTime);
-
-        // coleta a quantidade de transacoes onde a conta é o remetente e o destinatario
-        int incomingCount = incomingTransactions.size();
-        int outgoingCount = outgoingTransactions.size();
+        List<Transaction> incomingTransactions = getIncomingTransactions(accountId, startTime, endTime);
+        List<Transaction> outgoingTransactions = getOutgoingTransactions(accountId, startTime, endTime);
 
         // Coleta o valor total de todas as transacoes onde a conta é o remetente e o destinatario
         double totalIncomingValue = incomingTransactions.stream().mapToDouble(Transaction::getValue).sum();
         double totalOutgoingValue = outgoingTransactions.stream().mapToDouble(Transaction::getValue).sum();
 
-        // Valido se há alto grau de entrada/saida da conta
-        boolean highDegree = false;
-        if (outgoingCount >= minOutgoingTransactions && incomingCount >= minIncomingTransactions) {
-            log.info(String.format("ALTO GRAU DE ENTRADA/SAIDA: %d entradas e %d saídas no periodo.",
-                    outgoingCount, incomingCount));
-            highDegree = true;
-        }
+        // Valida se há alto grau de entrada/saida da conta
+        boolean highDegree = hasHighDegree(minIncomingTransactions, minOutgoingTransactions, outgoingTransactions, incomingTransactions);
 
         // Valida se há alto volume de transações saindo e entrando no conta
-        boolean highVolume = false;
-        if (totalOutgoingValue >= minTotalOutgoingValue && totalIncomingValue >= minTotalIncomingValue) {
-            log.info(String.format("ALTO VOLUME DE TRANSAÇÕES: Recebeu R$ %.2f e enviou R$ %.2f.",
-                    totalIncomingValue, totalOutgoingValue));
-            highVolume = true;
-        }
+        boolean highVolume = hasHighVolume(minTotalIncomingValue, minTotalOutgoingValue, totalOutgoingValue, totalIncomingValue);
 
         // valida se as transações são rapidamente repassadas (30 minutos)
+        boolean immediateFlow = hasImmediateFlow(highDegree, highVolume, incomingTransactions, outgoingTransactions);
+
+        // verifica se a conta retem baixo percentual do saldo
+        boolean lowretentionRatio = hasLowRetentionRatio(balanceRetentionThreshold, totalOutgoingValue, account);
+
+        // Se houve uma quantidade maior ou igual ao limite normal de contas remetentes enviando para a conta em análise, dentro do período
+        boolean hasManyUniqueIncomingSenders = hasManyUniqueIncomingSenders(minUniqueCounterpartiesThreshold, incomingTransactions);
+
+        // Se houve uma quantidade maior ou igual ao limite normal de contas destinatárias que a conta em análise fez transações, dentro do período
+        boolean hasManyUniqueOutgoingReceivers = hasManyUniqueOutgoingReceivers(minUniqueCounterpartiesThreshold, graph, accountId);
+
+        // Verificação final da suspeita
+        boolean isSuspect = isSuspect(highDegree, highVolume, immediateFlow, lowretentionRatio, hasManyUniqueIncomingSenders, hasManyUniqueOutgoingReceivers);
+
+        return getSuspicionCheckResponseDto(accountId, isSuspect, account);
+    }
+
+    private static SuspicionCheckResponseDto getSuspicionCheckResponseDto(Long accountId, boolean isSuspect, Account account) {
+        if (isSuspect) {
+            return new SuspicionCheckResponseDto(isSuspect, "ALERTA: Padrões de CONTA LARANJA fortes detectados!");
+        } else {
+            return new SuspicionCheckResponseDto(isSuspect, String.format("Nenhum padrão forte de conta laranja detectado para a conta %s (ID: %d).", account.getName(), accountId));
+        }
+    }
+
+    private static boolean isSuspect(boolean highDegree, boolean highVolume, boolean immediateFlow, boolean lowretentionRatio, boolean hasManyUniqueIncomingSenders, boolean hasManyUniqueOutgoingReceivers) {
+        boolean isSuspect = false;
+
+        if (highDegree && highVolume && immediateFlow && lowretentionRatio) {
+            isSuspect = true;
+        } else if (highDegree && highVolume && hasManyUniqueIncomingSenders && hasManyUniqueOutgoingReceivers) {
+            isSuspect = true;
+        }
+
+        return isSuspect;
+    }
+
+    private static boolean hasManyUniqueOutgoingReceivers(int minUniqueCounterpartiesThreshold, BankGraph graph, Long accountId) {
+        Set<Long> uniqueOutgoingReceiversFromGraph = new HashSet<>(graph.getNeighbors(accountId));
+
+        if (uniqueOutgoingReceiversFromGraph.size() >= minUniqueCounterpartiesThreshold) {
+            log.info(String.format("ALTA DIVERSIDADE DE DESTINATÁRIOS: Enviou para %d destinatários únicos.", uniqueOutgoingReceiversFromGraph.size()));
+            return true;
+        }
+
+        return false;
+    }
+
+    private static boolean hasManyUniqueIncomingSenders(int minUniqueCounterpartiesThreshold, List<Transaction> incomingTransactions) {
+        Set<Long> uniqueIncomingSenders = incomingTransactions.stream()
+                .map(transaction -> transaction.getSender().getId())
+                .collect(Collectors.toSet());
+
+        if (uniqueIncomingSenders.size() >= minUniqueCounterpartiesThreshold) {
+            log.info(String.format("ALTA DIVERSIDADE DE REMETENTES: Recebeu de %d remetentes únicos.", uniqueIncomingSenders.size()));
+            return true;
+        }
+
+        return false;
+    }
+
+    private static boolean hasLowRetentionRatio(double balanceRetentionThreshold, double totalOutgoingValue, Account account) {
+        if (totalOutgoingValue > 0 && account.getBalance() != null) {
+            double retentionRatio = account.getBalance() / totalOutgoingValue;
+
+            // Se percentual de retenção for menor que o limite
+            if (retentionRatio < balanceRetentionThreshold) {
+                log.info(String.format("BAIXA RETENÇÃO DE SALDO: Saldo atual (R$ %.2f) é muito baixo (%.2f%%) comparado ao volume recebido (R$ %.2f).", account.getBalance(), retentionRatio*100, totalOutgoingValue));
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean hasImmediateFlow(boolean highDegree, boolean highVolume, List<Transaction> incomingTransactions, List<Transaction> outgoingTransactions) {
         boolean immediateFlow = false;
+
         if (highDegree && highVolume) {
             // Para cada transação
             for (Transaction incoming : incomingTransactions) {
@@ -105,48 +163,50 @@ public class FraudDetectionService {
             }
         }
 
-        // verifica se a conta retem baixo percentual do saldo
-        double retentionRatio = 1.0; // 100% de retenção se não ter entradas ou saidas
-        if (totalOutgoingValue > 0 && account.getBalance() != null) {
-            // redefine o percentual de retenção com base no saldo e o dinheiro movimentado
-            retentionRatio = account.getBalance() / totalOutgoingValue;
+        return immediateFlow;
+    }
 
-            // Se percentual de retenção for menor que o limite
-            if (retentionRatio < balanceRetentionThreshold) {
-                log.info(String.format("BAIXA RETENÇÃO DE SALDO: Saldo atual (R$ %.2f) é muito baixo (%.2f%%) comparado ao volume recebido (R$ %.2f).", account.getBalance(), retentionRatio*100, totalOutgoingValue));
-            }
+    private static boolean hasHighVolume(double minTotalIncomingValue, double minTotalOutgoingValue, double totalOutgoingValue, double totalIncomingValue) {
+        if (totalOutgoingValue >= minTotalOutgoingValue && totalIncomingValue >= minTotalIncomingValue) {
+            log.info(String.format("ALTO VOLUME DE TRANSAÇÕES: Recebeu R$ %.2f e enviou R$ %.2f.",
+                    totalIncomingValue, totalOutgoingValue));
+            return true;
         }
 
-        // Conjunto de IDs de contas remetentes que enviaram para a conta em análise
-        Set<Long> uniqueIncomingSenders = incomingTransactions.stream()
-                .map(transaction -> transaction.getSender().getId())
-                .collect(Collectors.toSet());
+        return false;
+    }
 
-        // Conjunto de IDs de contas destinatários que receberam da conta em análise
-        Set<Long> uniqueOutgoingReceiversFromGraph = new HashSet<>(graph.getNeighbors(accountId));
+    private static boolean hasHighDegree(int minIncomingTransactions, int minOutgoingTransactions, List<Transaction> outgoingTransactions, List<Transaction> incomingTransactions) {
+        int incomingCount = incomingTransactions.size();
+        int outgoingCount = outgoingTransactions.size();
 
-        // Se houve uma quantidade maior ou igual ao limite normal de contas remetentes enviando para a conta em análise, dentro do período
-        if (uniqueIncomingSenders.size() >= minUniqueCounterpartiesThreshold) {
-            log.info(String.format("ALTA DIVERSIDADE DE REMETENTES: Recebeu de %d remetentes únicos.", uniqueIncomingSenders.size()));
-        }
-        // Se houve uma quantidade maior ou igual ao limite normal de contas destinatárias que a conta em análise fez transações, dentro do período
-        if (uniqueOutgoingReceiversFromGraph.size() >= minUniqueCounterpartiesThreshold) {
-            log.info(String.format("ALTA DIVERSIDADE DE DESTINATÁRIOS: Enviou para %d destinatários únicos.", uniqueOutgoingReceiversFromGraph.size()));
+        if (outgoingCount >= minOutgoingTransactions && incomingCount >= minIncomingTransactions) {
+            log.info(String.format("ALTO GRAU DE ENTRADA/SAIDA: %d entradas e %d saídas no periodo.",
+                    outgoingCount, incomingCount));
+            return true;
         }
 
-        // Verificação final da suspeita
-        boolean isSuspect = false;
-        if (highDegree && highVolume && immediateFlow && (retentionRatio < balanceRetentionThreshold)) {
-            isSuspect = true;
-        } else if (highDegree && highVolume && uniqueIncomingSenders.size() >= minUniqueCounterpartiesThreshold && uniqueOutgoingReceiversFromGraph.size() >= minUniqueCounterpartiesThreshold) {
-            isSuspect = true;
+        return false;
+    }
+
+    private List<Transaction> getOutgoingTransactions(Long accountId, LocalDateTime startTime, LocalDateTime endTime) {
+        return transactionRepository
+                .findBySenderIdAndDateTimeTransactionBetween(accountId, startTime, endTime);
+    }
+
+    private List<Transaction> getIncomingTransactions(Long accountId, LocalDateTime startTime, LocalDateTime endTime) {
+        return transactionRepository
+                .findByReceiverIdAndDateTimeTransactionBetween(accountId, startTime, endTime);
+    }
+
+    private static Account getAccountOrThrow(Long accountId, BankGraph graph) {
+        Account account = graph.getAccountById(accountId);
+
+        if (account == null) {
+            throw new RuntimeException("Conta com ID " + accountId + " não encontrada no grafo.");
         }
 
-        if (isSuspect) {
-            return new SuspicionCheckResponseDto(isSuspect, "ALERTA: Padrões de CONTA LARANJA fortes detectados!");
-        } else {
-            return new SuspicionCheckResponseDto(isSuspect, String.format("Nenhum padrão forte de conta laranja detectado para a conta %s (ID: %d).", account.getName(), accountId));
-        }
+        return account;
     }
 
     private BankGraph createInMemoryGraph() {
