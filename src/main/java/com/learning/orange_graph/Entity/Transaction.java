@@ -36,6 +36,6 @@ public class Transaction {
     private Double value;
 
     @Column(name = "date_Time_Transaction")
-    private LocalDateTime date_Time_Transaction;
+    private LocalDateTime dateTimeTransaction;
 
 }

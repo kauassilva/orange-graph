@@ -41,7 +41,7 @@ public class Account_Service {
         updAccount.setCpf(account.cpf());
         updAccount.setEmail(account.email());
         updAccount.setBalance(account.balance());
-        updAccount.setSuspect(account.suspect());
+        updAccount.setSuspectRating(account.suspectRating());
 
         return account_repository.save(updAccount);
     }
