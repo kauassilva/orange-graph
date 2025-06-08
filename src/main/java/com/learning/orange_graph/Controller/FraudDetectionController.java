@@ -36,17 +36,4 @@ public class FraudDetectionController {
         return ResponseEntity.ok(response);
     }
 
-   @PostMapping("/lot-transaction/{transactionId}")
-   public ResponseEntity<SuspicionCheckResponseDto> suspicionLotTransaction(@PathVariable Long transactionId){
-    if (transactionId == null) {
-        throw new RuntimeException("Transaction ID cannot be null");
-    }
-
-    
-    SuspicionCheckResponseDto response = service.suspicionLotTransaction(transactionId);
-    return ResponseEntity.ok(response);
-   }
-
-    
-
 }

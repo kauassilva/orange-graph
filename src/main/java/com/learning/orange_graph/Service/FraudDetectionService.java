@@ -227,9 +227,7 @@ public class FraudDetectionService {
         return bankGraph;
     }
 
-    private Set<Long> depthFirstTraversal(Long accountId) {
-        BankGraph graph = createInMemoryGraph();
-
+    private Set<Long> depthFirstTraversal(Long accountId, BankGraph graph) {
         // Conjunto para armazenar os nós visitados em ordem
         Set<Long> visited = new LinkedHashSet<>();
         // Pilha para gerenciar os nós a serem visitados
@@ -270,51 +268,6 @@ public class FraudDetectionService {
         return visited;
     }
 
-    public Transaction validateTransaction(Long transactionId){
-        return transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new RuntimeException("Transação não encontrada"));
-    }
-
-    public SuspicionCheckResponseDto suspicionLotTransaction(Long transactionId){
-        Transaction transaction = validateTransaction(transactionId);
-        Account sender = transaction.getSender();
-        Account receiver = transaction.getReceiver();
-        Long receiverId = receiver.getId();
-
-        boolean isSuspect = false;
-        SuspicionCheckResponseDto suspicionCheckResponseDto;
-
-        List<Transaction> transactionSender = transactionRepository.findBySender(sender);
-        Map<Double, Integer> countValue = new HashMap<>();
-
-        for (Transaction t : transactionSender) {
-            Double value = t.getValue();
-            countValue.put(value, countValue.getOrDefault(value, 0) + 1);
-        }
-
-
-        for (Map.Entry<Double, Integer> entry : countValue.entrySet()) {
-            if(entry.getValue() >= 5) {
-                isSuspect = true;
-                sender.setSuspectRating(sender.getSuspectRating()+1);
-            }
-        }
-
-        accountRepository.save(sender);
-
-        if (isSuspect) {
-            suspicionCheckResponseDto = new SuspicionCheckResponseDto(isSuspect, "A conta " +sender.getName() + " demonstrou transações suspeitas");
-        } else {
-            suspicionCheckResponseDto = new SuspicionCheckResponseDto(isSuspect, "Sem transações suspeitas");
-        }
-
-        BankGraph graph = createInMemoryGraph();
-        System.out.println(graph);
-        Set<Long> longs = depthFirstTraversal(receiverId);
-        System.out.println(longs);
-        return suspicionCheckResponseDto;
-    }
-
     public boolean suspicionTransactionDate(List<Transaction> incomingTransactions, Account account, double totalIncomingValue){
         Transaction transaction = incomingTransactions.get(0);
 
@@ -328,6 +281,5 @@ public class FraudDetectionService {
         return false;
 
     }
-
 
 }
