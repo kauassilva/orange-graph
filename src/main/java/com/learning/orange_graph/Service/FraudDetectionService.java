@@ -9,6 +9,7 @@ import com.learning.orange_graph.tad.BankGraph;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -55,6 +56,8 @@ public class FraudDetectionService {
         double totalIncomingValue = incomingTransactions.stream().mapToDouble(Transaction::getValue).sum();
         double totalOutgoingValue = outgoingTransactions.stream().mapToDouble(Transaction::getValue).sum();
 
+        boolean suspicionTransactionDate = suspicionTransactionDate(incomingTransactions, account, totalIncomingValue);
+
         // Valida se há alto grau de entrada/saida da conta
         boolean highDegree = hasHighDegree(minIncomingTransactions, minOutgoingTransactions, outgoingTransactions, incomingTransactions);
 
@@ -74,7 +77,7 @@ public class FraudDetectionService {
         boolean hasManyUniqueOutgoingReceivers = hasManyUniqueOutgoingReceivers(minUniqueCounterpartiesThreshold, graph, accountId);
 
         // Verificação final da suspeita
-        boolean isSuspect = isSuspect(highDegree, highVolume, immediateFlow, lowretentionRatio, hasManyUniqueIncomingSenders, hasManyUniqueOutgoingReceivers);
+        boolean isSuspect = isSuspect(highDegree, highVolume, immediateFlow, lowretentionRatio, hasManyUniqueIncomingSenders, hasManyUniqueOutgoingReceivers, suspicionTransactionDate);
 
         return getSuspicionCheckResponseDto(accountId, isSuspect, account);
     }
@@ -87,10 +90,10 @@ public class FraudDetectionService {
         }
     }
 
-    private static boolean isSuspect(boolean highDegree, boolean highVolume, boolean immediateFlow, boolean lowretentionRatio, boolean hasManyUniqueIncomingSenders, boolean hasManyUniqueOutgoingReceivers) {
+    private static boolean isSuspect(boolean highDegree, boolean highVolume, boolean immediateFlow, boolean lowretentionRatio, boolean hasManyUniqueIncomingSenders, boolean hasManyUniqueOutgoingReceivers, boolean suspicionTransactionDate) {
         boolean isSuspect = false;
 
-        if (highDegree && highVolume && immediateFlow && lowretentionRatio) {
+        if (highDegree && highVolume && immediateFlow && lowretentionRatio && suspicionTransactionDate) {
             isSuspect = true;
         } else if (highDegree && highVolume && hasManyUniqueIncomingSenders && hasManyUniqueOutgoingReceivers) {
             isSuspect = true;
@@ -311,5 +314,20 @@ public class FraudDetectionService {
         System.out.println(longs);
         return suspicionCheckResponseDto;
     }
+
+    public boolean suspicionTransactionDate(List<Transaction> incomingTransactions, Account account, double totalIncomingValue){
+        Transaction transaction = incomingTransactions.get(0);
+
+        LocalDate transactionDate = transaction.getDateTimeTransaction().toLocalDate();
+        LocalDate creationDate = account.getCreationDate();
+
+        if (transactionDate.equals(creationDate) && totalIncomingValue > 1000) {
+            log.info(String.format("Conta recebeu um alto valor no mesmo dia de sua criação"));
+            return true;
+        }
+        return false;
+
+    }
+
 
 }
