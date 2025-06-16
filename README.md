@@ -28,6 +28,10 @@ mvn clean install
 mvn spring-boot:run
 ```
 
+> [!NOTE]
+> <br>Para usar o H2, mantenha a configuração padrão do application.yml.
+> <br>Para usar o MySQL, lembre-se de subir o container Docker e ajustar o application.yml.
+
 ### 4. Acessando a aplicação
 
 - Swagger UI:
@@ -50,8 +54,18 @@ Abra o relatório de cobertura Jacoco em: `target/site/jacoco/index.html`
 
 Basta abrir esse arquivo no navegador.
 
-<hr></hr>
+## Demonstrações
 
-## Observação:
-Para usar o H2, mantenha a configuração padrão do application.yml.
-Para usar o MySQL, lembre-se de subir o container Docker e ajustar o application.yml.
+### Cobertura de Testes
+
+A cobertura de testes da aplicação é gerada automaticamente utilizando o plugin JaCoCo durante o processo de build. O relatório apresenta o percentual de código coberto por testes automatizados, permitindo acompanhar a qualidade e a robustez do projeto. Atualmente, a aplicação atinge 99% de cobertura de código.
+
+![Cobertura de Testes](docs/test-coverage.png)
+
+### Exemplo de Grafo
+
+O exemplo abaixo ilustra o grafo de transações gerado a partir dos dados presentes no arquivo data.sql. Esse grafo representa visualmente as relações entre as contas e as transações realizadas, conforme configurado no banco de dados inicial da aplicação. Dessa forma, é possível compreender como as contas estão conectadas e analisar o fluxo de transações simuladas no sistema.
+
+![Exemplo de Grafo](docs/graph-example.png)
+
+<hr></hr>
