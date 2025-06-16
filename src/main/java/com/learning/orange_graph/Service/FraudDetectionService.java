@@ -53,8 +53,8 @@ public class FraudDetectionService {
         List<Transaction> outgoingTransactions = getOutgoingTransactions(accountId, startTime, endTime);
 
         // Coleta o valor total de todas as transacoes onde a conta é o remetente e o destinatario
-        double totalIncomingValue = incomingTransactions.stream().mapToDouble(Transaction::getValue).sum();
-        double totalOutgoingValue = outgoingTransactions.stream().mapToDouble(Transaction::getValue).sum();
+        double totalIncomingValue = incomingTransactions.stream().mapToDouble(Transaction::getAmount).sum();
+        double totalOutgoingValue = outgoingTransactions.stream().mapToDouble(Transaction::getAmount).sum();
 
         boolean suspicionTransactionDate = suspicionTransactionDate(incomingTransactions, account, totalIncomingValue);
 
@@ -269,7 +269,11 @@ public class FraudDetectionService {
     }
 
     public boolean suspicionTransactionDate(List<Transaction> incomingTransactions, Account account, double totalIncomingValue){
-        Transaction transaction = incomingTransactions.get(0);
+        if (incomingTransactions.isEmpty()) {
+            return false;
+        }
+
+        Transaction transaction = incomingTransactions.getFirst();
 
         LocalDate transactionDate = transaction.getDateTimeTransaction().toLocalDate();
         LocalDate creationDate = account.getCreationDate();

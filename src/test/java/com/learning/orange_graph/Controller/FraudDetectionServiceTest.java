@@ -56,11 +56,11 @@ class FraudDetectionServiceTest {
         when(incoming.getSender()).thenReturn(account);
         when(incoming.getReceiver()).thenReturn(receiver);
         when(incoming.getDateTimeTransaction()).thenReturn(LocalDateTime.now());
-        when(incoming.getValue()).thenReturn(2000.0);
+        when(incoming.getAmount()).thenReturn(2000.0);
         when(outgoing.getSender()).thenReturn(account);
         when(outgoing.getReceiver()).thenReturn(receiver);
         when(outgoing.getDateTimeTransaction()).thenReturn(LocalDateTime.now().plusMinutes(10));
-        when(outgoing.getValue()).thenReturn(1500.0);
+        when(outgoing.getAmount()).thenReturn(1500.0);
 
         List<Transaction> incomingTransactions = Collections.singletonList(incoming);
         List<Transaction> outgoingTransactions = Collections.singletonList(outgoing);
@@ -106,12 +106,12 @@ class FraudDetectionServiceTest {
         when(incoming.getSender()).thenReturn(account);
         when(incoming.getReceiver()).thenReturn(receiver);
         when(incoming.getDateTimeTransaction()).thenReturn(LocalDateTime.now().minusDays(5));
-        when(incoming.getValue()).thenReturn(100.0);
+        when(incoming.getAmount()).thenReturn(100.0);
 
         when(outgoing.getSender()).thenReturn(account);
         when(outgoing.getReceiver()).thenReturn(receiver);
         when(outgoing.getDateTimeTransaction()).thenReturn(LocalDateTime.now().minusDays(4));
-        when(outgoing.getValue()).thenReturn(50.0);
+        when(outgoing.getAmount()).thenReturn(50.0);
 
         List<Transaction> incomingTransactions = Collections.singletonList(incoming);
         List<Transaction> outgoingTransactions = Collections.singletonList(outgoing);
@@ -189,12 +189,12 @@ void testIsSuspect_Indirect_AllFirstConditionTrue() {
     when(incoming.getSender()).thenReturn(account);
     when(incoming.getReceiver()).thenReturn(receiver);
     when(incoming.getDateTimeTransaction()).thenReturn(LocalDateTime.now());
-    when(incoming.getValue()).thenReturn(2000.0);
+    when(incoming.getAmount()).thenReturn(2000.0);
 
     when(outgoing.getSender()).thenReturn(account);
     when(outgoing.getReceiver()).thenReturn(receiver);
     when(outgoing.getDateTimeTransaction()).thenReturn(LocalDateTime.now().plusMinutes(10));
-    when(outgoing.getValue()).thenReturn(1500.0);
+    when(outgoing.getAmount()).thenReturn(1500.0);
 
     List<Transaction> incomingTransactions = Collections.singletonList(incoming);
     List<Transaction> outgoingTransactions = Collections.singletonList(outgoing);

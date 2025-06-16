@@ -41,7 +41,7 @@ public class TransactionService {
         Transaction transaction = new Transaction();
         transaction.setSender(sender);
         transaction.setReceiver(receiver);
-        transaction.setValue(request.value());
+        transaction.setAmount(request.value());
         transaction.setDateTimeTransaction(LocalDateTime.now());
 
         return transactionRepository.save(transaction);

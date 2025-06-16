@@ -37,7 +37,7 @@ public class TransactionController {
                 transaction.getId(),
                 transaction.getSender().getName(),
                 transaction.getReceiver().getName(),
-                transaction.getValue(),
+                transaction.getAmount(),
                 transaction.getDateTimeTransaction()
         );
 

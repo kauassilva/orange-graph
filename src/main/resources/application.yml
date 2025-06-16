@@ -6,40 +6,48 @@ spring:
   application:
     name: orange-graph
 
-  datasource:
-    url: jdbc:mysql://localhost:3306/orange_graph_db
-    username: root
-    password: root
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
   sql:
     init:
       mode: always
       data-locations: classpath:data.sql
 
-  jpa:
-    hibernate:
-      ddl-auto: drop-and-create
-    defer-datasource-initialization: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
-        show_sql: true
-        format_sql: true
-        use_sql_comments: true
+  # INICIO - Configuração MySQL
+
+#  datasource:
+#    url: jdbc:mysql://localhost:3306/orange_graph_db
+#    username: root
+#    password: root
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#
+#  jpa:
+#    hibernate:
+#      ddl-auto: drop-and-create
+#    defer-datasource-initialization: true
+#    properties:
+#      hibernate:
+#        dialect: org.hibernate.dialect.MySQLDialect
+#        show_sql: true
+#        format_sql: true
+#        use_sql_comments: true
+
+  # FIM - Configuração MySQL
+
+  # INICIO - configuração H2
 
   h2:
     console:
       enabled: true
 
-  
-  #datasource:
-    #url: jdbc:h2:mem:orange_graph_db
-    #username: sa
-    #password: password
-    #driverClassName: org.h2.Driver
+  datasource:
+    url: jdbc:h2:mem:orange_graph_db
+    username: sa
+    password: password
+    driverClassName: org.h2.Driver
 
-  #jpa:
-   # database-platform: org.hibernate.dialect.H2Dialect
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    defer-datasource-initialization: true
 
-  #configuração H2 caso tenha problemas com o docker
+  # FIM - Configuração H2

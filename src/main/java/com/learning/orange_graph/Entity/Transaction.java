@@ -32,8 +32,8 @@ public class Transaction {
     @JoinColumn(name = "receiver_id", nullable = false)
     private Account receiver;
 
-    @Column(name = "value")
-    private Double value;
+    @Column(name = "amount")
+    private Double amount;
 
     @Column(name = "date_Time_Transaction")
     private LocalDateTime dateTimeTransaction;

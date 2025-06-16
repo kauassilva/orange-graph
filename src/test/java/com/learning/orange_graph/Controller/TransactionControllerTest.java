@@ -38,7 +38,7 @@ class TransactionControllerTest {
         when(transaction.getId()).thenReturn(1L);
         when(transaction.getSender()).thenReturn(sender);
         when(transaction.getReceiver()).thenReturn(receiver);
-        when(transaction.getValue()).thenReturn(100.0);
+        when(transaction.getAmount()).thenReturn(100.0);
         LocalDateTime now = LocalDateTime.now();
         when(transaction.getDateTimeTransaction()).thenReturn(now);
 
