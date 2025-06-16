@@ -2,12 +2,16 @@
 
 Aplicação Spring Boot para gerenciamento de transações e contas, com suporte a MySQL e H2.
 
+<br/>
+
 ## Requisitos
 
 - Java 21+
 - Maven 3.8+
 - Docker (para rodar o MySQL)
 - Navegador web
+
+<br>
 
 ## Como rodar a aplicação
 
@@ -17,9 +21,13 @@ Aplicação Spring Boot para gerenciamento de transações e contas, com suporte
 docker-compose up -d
 ```
 
+<br>
+
 ### 2. Configurando o banco
 
 No arquivo src/main/resources/application.yml, descomente a seção de configuração do MySQL e comente a do H2, se desejar usar o MySQL.
+
+<br>
 
 ### 3. Build e execução
 
@@ -28,9 +36,7 @@ mvn clean install
 mvn spring-boot:run
 ```
 
-> [!NOTE]
-> <br>Para usar o H2, mantenha a configuração padrão do application.yml.
-> <br>Para usar o MySQL, lembre-se de subir o container Docker e ajustar o application.yml.
+<br>
 
 ### 4. Acessando a aplicação
 
@@ -43,6 +49,12 @@ mvn spring-boot:run
   - `User`: sa
   - `Password`: password
  
+> [!NOTE]
+> Para usar o H2, mantenha a configuração padrão do application.yml.
+> <br>Para usar o MySQL, lembre-se de subir o container Docker e ajustar o application.yml.
+
+<br>
+ 
 ## Testes e cobertura
 
 Após rodar os testes com:
@@ -50,9 +62,9 @@ Após rodar os testes com:
 mvn clean install
 ```
 
-Abra o relatório de cobertura Jacoco em: `target/site/jacoco/index.html`
+Abra o relatório de cobertura Jacoco em: `target/site/jacoco/index.html`. Basta abrir esse arquivo no navegador.
 
-Basta abrir esse arquivo no navegador.
+<br>
 
 ## Demonstrações
 
